@@ -54,7 +54,10 @@ Place your input video (e.g., `road.mp4`) in the `resources/` folder. Ensure the
 ### 2. Run the script
 
 Once all dependencies are installed, run the Python script to start vehicle detection and speed measurement:
-bash python src/main.py
+
+```bash
+python src/detect.py
+```
 
 The script will:
 
