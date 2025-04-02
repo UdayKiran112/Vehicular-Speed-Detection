@@ -7,7 +7,7 @@ from tracker import Tracker
 
 model = YOLO("../models/yolov8s.pt")
 
-cap = cv2.VideoCapture("../resources/highway.mp4")
+cap = cv2.VideoCapture("../resources/test.mp4")
 
 class_list = [
     "person",
@@ -107,7 +107,7 @@ if not os.path.exists("output"):
     os.makedirs("output")
 
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-out = cv2.VideoWriter("../output/output_test2.mp4", fourcc, 20.0, (1020, 500))
+out = cv2.VideoWriter("../output/final_output.mp4", fourcc, 20.0, (1020, 500))
 
 speed_data = {}  # Dictionary to store speed data
 
