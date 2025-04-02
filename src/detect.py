@@ -107,7 +107,7 @@ if not os.path.exists("output"):
     os.makedirs("output")
 
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-out = cv2.VideoWriter("../output/final_output.mp4", fourcc, 20.0, (1020, 500))
+out = cv2.VideoWriter("../output/final_output_1.mp4", fourcc, 20.0, (1020, 500))
 
 speed_data = {}  # Dictionary to store speed data
 
@@ -149,15 +149,6 @@ while True:
                 speed_data[obj_id] = int(
                     speed_kph
                 )  # Store speed data in the dictionary
-                cv2.putText(
-                    frame,
-                    f"{int(speed_kph)} Km/h",
-                    (x4, y4),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    (0, 255, 255),
-                    2,
-                )
 
         if blue_line_y < (cy + offset) and blue_line_y > (cy - offset):
             up[obj_id] = time.time()
@@ -169,15 +160,6 @@ while True:
                 speed_data[obj_id] = int(
                     speed_kph
                 )  # Store speed data in the dictionary
-                cv2.putText(
-                    frame,
-                    f"{int(speed_kph)} Km/h",
-                    (x4, y4),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    (0, 255, 255),
-                    2,
-                )
 
         cv2.rectangle(frame, (x3, y3), (x4, y4), (0, 255, 0), 2)
         cv2.putText(
@@ -190,7 +172,6 @@ while True:
             1,
         )
 
-        # If speed is already stored, display it constantly on the vehicle
         if obj_id in speed_data:
             cv2.putText(
                 frame,
@@ -243,3 +224,7 @@ while True:
 cap.release()
 out.release()
 cv2.destroyAllWindows()
+
+# Save speeds to CSV file
+speed_df = pd.DataFrame(list(speed_data.items()), columns=["Vehicle_ID", "Speed_km_h"])
+speed_df.to_csv("../output/vehicle_speeds.csv", index=False)
