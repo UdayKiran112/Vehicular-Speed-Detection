@@ -25,11 +25,8 @@ if not os.path.exists("output"):
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 out = cv2.VideoWriter("../output/final_output_haar.mp4", fourcc, 20.0, (1020, 500))
 
-# Load multiple Haar cascades
-car_cascade = cv2.CascadeClassifier("cascades/haarcascade_car.xml")
-truck_cascade = cv2.CascadeClassifier("cascades/haarcascade_truck.xml")
-bus_cascade = cv2.CascadeClassifier("cascades/haarcascade_bus.xml")
-bike_cascade = cv2.CascadeClassifier("cascades/haarcascade_motorcycle.xml")
+# Load Haar cascades
+car_cascade = cv2.CascadeClassifier("cars.xml")
 
 while True:
     ret, frame = cap.read()
@@ -42,7 +39,7 @@ while True:
     detections = []
 
     # Detect using each cascade
-    for cascade in [car_cascade, truck_cascade, bus_cascade, bike_cascade]:
+    for cascade in [car_cascade]:
         vehicles = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
         for x, y, w, h in vehicles:
             detections.append([x, y, w, h])
