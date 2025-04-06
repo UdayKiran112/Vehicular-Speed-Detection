@@ -1,7 +1,6 @@
 import cv2
 import pandas as pd
 import os
-import math
 from tracker import Tracker
 
 cap = cv2.VideoCapture("../resources/test.mp4")
@@ -23,19 +22,16 @@ RED_LINE_Y = 198
 BLUE_LINE_Y = 268
 OFFSET = 6
 
-# Create output folders
-if not os.path.exists("output"):
-    os.makedirs("output")
-if not os.path.exists("detected_frames"):
-    os.makedirs("detected_frames")
+# Output folder
+os.makedirs("output", exist_ok=True)
 
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 out = cv2.VideoWriter(
     "../output/final_output_traditional.mp4", fourcc, 20.0, (1020, 500)
 )
 
-# Background subtractor
-fgbg = cv2.createBackgroundSubtractorMOG2(history=100, varThreshold=40)
+# Background Subtractor
+fgbg = cv2.createBackgroundSubtractorKNN(detectShadows=True)
 
 while True:
     ret, frame = cap.read()
@@ -44,7 +40,7 @@ while True:
 
     count += 1
     frame = cv2.resize(frame, (1020, 500))
-    roi = frame[100:400, 200:900]  # Focus on central region
+    roi = frame[100:400, 200:900]
 
     fgmask = fgbg.apply(roi)
     _, thresh = cv2.threshold(fgmask, 244, 255, cv2.THRESH_BINARY)
@@ -56,9 +52,11 @@ while True:
 
     for cnt in contours:
         area = cv2.contourArea(cnt)
-        if area > 500:
+        if area > 800:
             x, y, w, h = cv2.boundingRect(cnt)
-            detections.append([x + 200, y + 100, w, h])  # Offset to full frame
+            aspect_ratio = w / float(h)
+            if 0.3 < aspect_ratio < 4.0:
+                detections.append([x + 200, y + 100, w, h])
 
     boxes_ids = tracker.update(detections)
 
@@ -67,10 +65,9 @@ while True:
         cx = (x + x + w) // 2
         cy = (y + y + h) // 2
 
-        # Downward movement (Red -> Blue)
+        # Downward movement
         if RED_LINE_Y - OFFSET < cy < RED_LINE_Y + OFFSET:
             down_frame[obj_id] = count
-
         if obj_id in down_frame and BLUE_LINE_Y - OFFSET < cy < BLUE_LINE_Y + OFFSET:
             frame_diff = count - down_frame[obj_id]
             if obj_id not in counter_down:
@@ -79,10 +76,9 @@ while True:
                 speed_kph = (DIST_BETWEEN_LINES_M / elapsed_time) * 3.6
                 speed_data[obj_id] = int(speed_kph)
 
-        # Upward movement (Blue -> Red)
+        # Upward movement
         if BLUE_LINE_Y - OFFSET < cy < BLUE_LINE_Y + OFFSET:
             up_frame[obj_id] = count
-
         if obj_id in up_frame and RED_LINE_Y - OFFSET < cy < RED_LINE_Y + OFFSET:
             frame_diff = up_frame[obj_id] - count
             if obj_id not in counter_up:
@@ -101,7 +97,6 @@ while True:
             (255, 255, 255),
             1,
         )
-
         if obj_id in speed_data:
             cv2.putText(
                 frame,
@@ -113,7 +108,7 @@ while True:
                 2,
             )
 
-    # Display lines and counts
+    # Draw info overlays
     cv2.rectangle(frame, (0, 0), (250, 90), (0, 255, 255), -1)
     cv2.line(frame, (172, RED_LINE_Y), (774, RED_LINE_Y), (0, 0, 255), 2)
     cv2.putText(
@@ -154,9 +149,7 @@ while True:
         1,
     )
 
-    cv2.imwrite(f"detected_frames/frame_{count}.jpg", frame)
     out.write(frame)
-
     cv2.imshow("frames", frame)
     if cv2.waitKey(1) & 0xFF == 27:
         break
@@ -165,6 +158,6 @@ cap.release()
 out.release()
 cv2.destroyAllWindows()
 
-# Save to CSV
+# Save results to CSV
 speed_df = pd.DataFrame(list(speed_data.items()), columns=["Vehicle_ID", "Speed_km_h"])
 speed_df.to_csv("../output/vehicle_speeds_traditional.csv", index=False)
